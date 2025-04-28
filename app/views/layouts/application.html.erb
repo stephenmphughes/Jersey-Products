@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>JerseyProducts</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_pack_tag 'application', 'data-turbo-track': 'reload', defer: true %>
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Exo+2:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>

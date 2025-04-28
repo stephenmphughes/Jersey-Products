@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jersey Dashboard (HTML Client)</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Aldrich&family=Exo+2&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/plain.css" />
+  </head>
+
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar" id="custom-navbar">
+      <div
+        class="container px-3 d-flex justify-content-between align-items-center"
+      >
+        <a href="/html-client.html">
+          <img src="/assets/NavBarLogo.svg" alt="Logo" class="navbar-logo" />
+        </a>
+        <ul class="navbar-nav d-flex flex-row gap-3">
+          <li><a class="nav-link" href="/html-client.html">Home</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Forms -->
+    <div class="container mt-5 d-flex flex-wrap justify-content-between gap-4">
+      <!-- Add Jersey Form -->
+      <div class="col-md-6">
+        <h3 class="text-white mb-3">Add Jersey</h3>
+        <form id="add-jersey-form" class="product-edit-card p-4">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea
+              name="description"
+              class="form-control"
+              required
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input
+              type="number"
+              name="price"
+              class="form-control"
+              step="0.01"
+              required
+            />
+          </div>
+          <div class="form-check mb-3">
+            <input
+              type="checkbox"
+              name="available"
+              class="form-check-input"
+              id="available"
+            />
+            <label class="form-check-label" for="available">Available</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Upload Image</label>
+            <input
+              type="file"
+              name="image"
+              class="form-control"
+              accept="image/*"
+            />
+          </div>
+          <button type="submit" class="btn btn-success w-100">Submit</button>
+        </form>
+      </div>
+
+      <!-- Add Stock Order Form -->
+      <div class="col-md-5">
+        <h3 class="text-white mb-3">Stock Order</h3>
+        <form id="add-stockorder-form" class="stockorder-form p-4">
+          <div class="mb-3">
+            <label class="form-label">Select Jersey</label>
+            <select
+              name="product_id"
+              class="form-select"
+              id="product-select"
+              required
+            >
+              <option value="">-- Select a Jersey --</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Quantity</label>
+            <input
+              type="number"
+              name="quantity"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Sizes</label>
+            <input type="text" name="sizes" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Comments</label>
+            <textarea name="comments" class="form-control"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            Place Order
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Jerseys Section -->
+    <div class="container mt-5">
+      <h4 class="text-white mb-3">Jerseys</h4>
+      <div class="row g-4" id="jersey-list"></div>
+    </div>
+
+    <!-- Stock Orders Section -->
+    <div class="container mt-5">
+      <h4 class="text-white mb-3">Stock Orders</h4>
+      <div id="stockorder-list"></div>
+    </div>
+
+    <!-- Edit Product Section (Hidden) -->
+    <div class="container mt-5" id="edit-product-section" style="display: none">
+      <h4 class="text-white mb-3">Edit Jersey</h4>
+      <form id="edit-product-form" class="product-edit-card p-4">
+        <input type="hidden" id="edit-id" />
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input type="text" id="edit-name" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea
+            id="edit-description"
+            class="form-control"
+            required
+          ></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Price</label>
+          <input
+            type="number"
+            id="edit-price"
+            class="form-control"
+            step="0.01"
+            required
+          />
+        </div>
+        <div class="form-check mb-3">
+          <input type="checkbox" id="edit-available" class="form-check-input" />
+          <label class="form-check-label" for="edit-available">Available</label>
+        </div>
+        <button type="submit" class="btn btn-success w-100">
+          Save Changes
+        </button>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <footer id="custom-footer" class="mt-5">
+      <div class="footer-logo text-center py-3 my-5">
+        <img src="/assets/NavBarLogo.svg" alt="Logo" class="footer-logo-img" />
+      </div>
+      <div class="footer-bottom text-center pb-3 small">
+        <p>Top Quality Jersey Products</p>
+      </div>
+    </footer>
+
+    <!-- ***** JAVASCRIPT ***** -->
+    <script>
+      const apiURL = "/api/v1/products";
+      const stockOrderURL = "/api/v1/stock_orders";
+
+      async function fetchJerseys() {
+        const res = await fetch(apiURL);
+        const data = await res.json();
+        const list = document.getElementById("jersey-list");
+        list.innerHTML = "";
+
+        data.data.forEach((prod) => {
+          const { id, attributes } = prod;
+          const card = document.createElement("div");
+          card.className = "col-12 col-sm-6 col-md-4";
+
+          card.innerHTML = `
+          <div class="card custom-jersey-card h-100 shadow">
+            <img src="${
+              attributes.image_url || "/assets/placeholder-jersey.png"
+            }" class="card-img-top" alt="jersey" />
+            <div class="card-body">
+              <h5 class="card-title">${attributes.name}</h5>
+              <p class="card-text">${attributes.description}</p>
+              <p class="card-text"><strong>€${attributes.price}</strong></p>
+              <span class="badge ${
+                attributes.available ? "bg-success" : "bg-secondary"
+              }">
+                ${attributes.available ? "Available" : "Out of Stock"}
+              </span>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+              <button class="btn btn-primary btn-sm" onclick="openEditForm(${id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProduct(${id})">Delete</button>
+            </div>
+          </div>
+        `;
+          list.appendChild(card);
+        });
+      }
+
+      async function fetchStockOrders() {
+        const res = await fetch(stockOrderURL);
+        const data = await res.json();
+        const list = document.getElementById("stockorder-list");
+        list.innerHTML = "";
+
+        if (data.data.length === 0) {
+          list.innerHTML = `<p class="text-white text-center">No stock orders yet.</p>`;
+          return;
+        }
+
+        const headerRow = document.createElement("div");
+        headerRow.className = "row text-white fw-bold mb-2";
+        headerRow.innerHTML = `
+        <div class="col-2">#Order</div>
+        <div class="col-2">Product</div>
+        <div class="col-2">Quantity</div>
+        <div class="col-2">Sizes</div>
+        <div class="col-3">Comments</div>
+        <div class="col-1 text-end">Action</div>
+      `;
+        list.appendChild(headerRow);
+
+        data.data.forEach((order) => {
+          const card = document.createElement("div");
+          card.className = "card bg-white text-dark mb-2 p-2 shadow";
+
+          card.innerHTML = `
+          <div class="row align-items-center">
+            <div class="col-2">#${order.id}</div>
+            <div class="col-2">${order.attributes.product_name || "N/A"}</div>
+            <div class="col-2">${order.attributes.quantity}</div>
+            <div class="col-2">${order.attributes.sizes}</div>
+            <div class="col-3">${
+              order.attributes.comment || "No comments"
+            }</div>
+            <div class="col-1 text-end">
+              <button class="btn btn-danger btn-sm" onclick="deleteStockOrder(${
+                order.id
+              })">Delete</button>
+            </div>
+          </div>
+        `;
+          list.appendChild(card);
+        });
+      }
+
+      async function populateProductDropdown() {
+        const res = await fetch(apiURL);
+        const data = await res.json();
+        const select = document.getElementById("product-select");
+        select.innerHTML = '<option value="">-- Select a Jersey --</option>';
+
+        data.data.forEach((prod) => {
+          const option = document.createElement("option");
+          option.value = prod.id;
+          option.textContent = prod.attributes.name;
+          select.appendChild(option);
+        });
+      }
+
+      async function openEditForm(id) {
+        const res = await fetch(`${apiURL}/${id}`);
+        const data = await res.json();
+        const product = data.data.attributes;
+
+        document.getElementById("edit-id").value = id;
+        document.getElementById("edit-name").value = product.name;
+        document.getElementById("edit-description").value = product.description;
+        document.getElementById("edit-price").value = product.price;
+        document.getElementById("edit-available").checked = product.available;
+
+        document.getElementById("edit-product-section").style.display = "block";
+      }
+
+      document
+        .getElementById("edit-product-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const id = document.getElementById("edit-id").value;
+          const name = document.getElementById("edit-name").value;
+          const description = document.getElementById("edit-description").value;
+          const price = document.getElementById("edit-price").value;
+          const available = document.getElementById("edit-available").checked;
+
+          const body = {
+            product: { name, description, price, available },
+          };
+
+          await fetch(`${apiURL}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          document.getElementById("edit-product-section").style.display =
+            "none";
+          fetchJerseys();
+        });
+
+      document
+        .getElementById("add-jersey-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+
+          await fetch(apiURL, {
+            method: "POST",
+            body: formData,
+          });
+
+          e.target.reset();
+          fetchJerseys();
+          populateProductDropdown();
+        });
+
+      document
+        .getElementById("add-stockorder-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const body = {
+            stock_order: {
+              product_id: formData.get("product_id"),
+              quantity: formData.get("quantity"),
+              sizes: formData.get("sizes"),
+              comment: formData.get("comments"),
+            },
+          };
+
+          await fetch(stockOrderURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          e.target.reset();
+          fetchStockOrders();
+        });
+
+      async function deleteProduct(id) {
+        if (confirm("Are you sure you want to delete this jersey?")) {
+          await fetch(`${apiURL}/${id}`, { method: "DELETE" });
+          fetchJerseys();
+          populateProductDropdown();
+        }
+      }
+
+      async function deleteStockOrder(id) {
+        if (confirm("Are you sure you want to delete this stock order?")) {
+          await fetch(`${stockOrderURL}/${id}`, { method: "DELETE" });
+          fetchStockOrders();
+        }
+      }
+
+      fetchJerseys();
+      fetchStockOrders();
+      populateProductDropdown();
+    </script>
+  </body>
+</html>
+
+<!-- References 
+# https://getbootstrap.com/docs/5.3/layout/grid/
+# https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+# https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API/Using_FormData_Objects
+# https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#supplying_request_options
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
+
+
+
+
+
+-->
